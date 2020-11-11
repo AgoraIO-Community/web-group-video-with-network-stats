@@ -22,6 +22,7 @@
 
 .remote-stream-container { 
   display: inline-block;
+  max-width: 430px;
 }
 
 #remote-streams {
@@ -39,8 +40,9 @@
   position: absolute;
   z-index: 1;
   height: 100% !important;
-  width: 80%;
-  max-width: 500px;
+  width: 100%;
+  
+  max-width: 400px;
 }
 
 #mute-overlay {
@@ -81,4 +83,32 @@
 
 #screen-share-btn-container {
   z-index: 99;
+}
+
+#stats-container {
+  z-index: 99;
+}
+
+#main-video-stats-btn-container {
+  z-index: 99;
+}
+
+#main-stats-btn {
+  display: none;
+}
+
+#local-stats-container {
+  z-index: 99;
+}
+
+.remote-stats-container {
+  z-index: 99;
+}
+
+#video-stats-btn {
+  display: none;
+}
+
+#audio-stats-btn {
+  display: none;
 }
