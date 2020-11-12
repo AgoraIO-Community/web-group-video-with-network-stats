@@ -57,6 +57,9 @@ client.on('stream-added', function (evt) {
     client.subscribe(stream, function (err) {
       console.log("[ERROR] : subscribe stream failed", err);
     });
+    // Set the fallback option for each remote stream. 
+    // - When the network condition is poor, set the client to receive audio only. 
+    client.setStreamFallbackOption(stream, 2);
   }
 });
 
@@ -70,6 +73,7 @@ client.on('stream-subscribed', function (evt) {
     remoteStream.play('full-screen-video');
     $('#main-stats-btn').show();
   } else {
+    client.setRemoteVideoStreamType(remoteStream, 1); // subscribe to the low stream
     addRemoteStreamMiniView(remoteStream);
   }
 });
@@ -81,8 +85,14 @@ client.on("peer-leave", function(evt) {
     remoteStreams[streamId].stop(); // stop playing the feed
     delete remoteStreams[streamId]; // remove stream from list
     if (streamId == mainStreamId) {
+      // hide the stats popover
+      var mainVideoStatsBtn = $('#main-stats-btn');
+      if(mainVideoStatsBtn.data('bs.popover')) {
+          mainVideoStatsBtn.popover('hide');
+      }
+      // swap out the video
       var streamIds = Object.keys(remoteStreams);
-      if (streamIds.length > 1) {
+      if (streamIds.length > 0) {
         var randomId = streamIds[Math.floor(Math.random()*streamIds.length)]; // select from the remaining streams
         remoteStreams[randomId].stop(); // stop the stream's existing playback
         var remoteContainerID = '#' + randomId + '_container';
@@ -93,6 +103,11 @@ client.on("peer-leave", function(evt) {
         $('#main-stats-btn').hide();
       }
     } else {
+      // close the pop-over
+      var remoteVideoStatsBtn = $('#'+ streamId +'-stats-btn');
+      if(remoteVideoStatsBtn.data('bs.popover')) {
+          remoteVideoStatsBtn.popover('hide');
+      }
       var remoteContainerID = '#' + streamId + '_container';
       $(remoteContainerID).empty().remove(); // 
     }
@@ -122,6 +137,15 @@ client.on("unmute-video", function (evt) {
   toggleVisibility('#' + evt.uid + '_no-video', false);
 });
 
+// Stream Fallback listeners
+client.on("stream-fallback", function (evt) {
+  console.log(evt);
+});
+
+client.on("stream-type-changed", function (evt) {
+  console.log(evt);
+});
+
 // join a channel
 function joinChannel(channelName, uid, token) {
   client.join(token, channelName, uid, function(uid) {
@@ -146,6 +170,22 @@ function createCameraStream(uid) {
     console.log("getUserMedia successfully");
     // TODO: add check for other streams. play local stream full size if alone in channel
     localStream.play('local-video'); // play the given stream within the local-video div
+
+    // Enable dual-stream mode for the sender.
+    client.enableDualStream(function () {
+      console.log("Enable dual stream success!");
+    }, function (err) {
+      console.log(err);
+    });
+
+    // set the lowstream profile settings
+    var lowVideoStreamProfile = {
+      bitrate: 200,
+      framerate: 15,
+      height: 240,
+      width: 320
+    }
+    client.setLowStreamParameter(lowVideoStreamProfile);
 
     // publish local stream
     client.publish(localStream, function (err) {
@@ -173,7 +213,7 @@ function initScreenShare(agoraAppId, channelName) {
 
 function joinChannelAsScreenShare(channelName) {
   var token = generateToken();
-  var userID = null; // set to null to auto generate uid on successfull connection
+  var userID = 1337; // set to null to auto generate uid on successfull connection
   screenClient.join(token, channelName, userID, function(uid) { 
     localStreams.screen.id = uid;  // keep track of the uid of the screen stream.
     
@@ -212,12 +252,13 @@ function joinChannelAsScreenShare(channelName) {
     // TODO: add logic to swap main video feed back from container
     if(mainStreamId){
       remoteStreams[mainStreamId].stop(); // stop the main video stream playback
+      client.setRemoteVideoStreamType(remoteStreams[mainStreamId], 1); // subscribe to the low stream
       addRemoteStreamMiniView(remoteStreams[mainStreamId]); // send the main video stream to a container
     }
     mainStreamId = localStreams.screen.id;
     evt.stream.play('full-screen-video');
     // localStreams.screen.stream.play('full-screen-video'); // play the screen share as full-screen-video (vortext effect?)
-    $("#video-btn").prop("disabled",true); // disable the video button (as cameara video stream is disabled)
+    // $("#video-btn").prop("disabled",true); // disable the video button (as cameara video stream is disabled)
   });
   
   screenClient.on('stopScreenSharing', function (evt) {
@@ -279,9 +320,11 @@ function addRemoteStreamMiniView(remoteStream){
   $(containerId).dblclick(function() {
     // play selected container as full screen - swap out current full screen stream
     remoteStreams[mainStreamId].stop(); // stop the main video stream playback
+    client.setRemoteVideoStreamType(remoteStreams[mainStreamId], 1); // subscribe to the low stream
     addRemoteStreamMiniView(remoteStreams[mainStreamId]); // send the main video stream to a container
     $(containerId).empty().remove(); // remove the stream's miniView container
     remoteStreams[streamId].stop() // stop the container's video stream playback
+    client.setRemoteVideoStreamType(remoteStreams[streamId], 0); // subscribe to the high stream
     remoteStreams[streamId].play('full-screen-video'); // play the remote stream as the full screen video
     mainStreamId = streamId; // set the container stream id as the new main stream id
   });
@@ -294,7 +337,35 @@ function leaveChannel() {
   }
 
   // disable stats interval
-  disableStats(); 
+  disableStats();
+
+  // add the static pop-over btns first
+  var statsBtns = [
+    $('#main-stats-btn'),
+    $('#network-stats-btn'),
+    $('#session-stats-btn'),
+    $('#audio-stats-btn'),
+    $('#video-stats-btn')
+  ]
+
+  // loop through remote streams and add dynamic popover btns
+  var streamIds = Object.keys(remoteStreams);
+  if (streamIds.length > 0) {
+    streamIds.forEach(function (streamId) {
+      var remoteStatbtn = $('#' + streamId +'-stats-btn')
+      if(remoteStatbtn)[
+        statsBtns.push(remoteStatbtn)
+      ]
+    })
+  }
+
+  // hide all pop-overs
+  statsBtns.forEach(function(statBtn){
+    if(statBtn.data('bs.popover')) {
+      statBtn.popover('hide');
+    }
+  })
+
 
   client.leave(function() {
     console.log("client leaves channel");
