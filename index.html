@@ -8,15 +8,21 @@
 		<div class="container-fluid p-0">
 			<div id="main-container">
 				<div id="stats-container" class="col-2 float-left text-left mt-2">
-					<button id="network-stats-btn" type="button" class="btn btn-lg" data-toggle="popover" data-placement="bottom" data-html="true" title="Network stats" data-content="loading stats...">
-						<i id="connection-strength-icon" class="fas fa-signal" ></i>
+					<button id="stream-stats-btn" type="button" class="btn btn-lg stream-stat-btn" data-toggle="popover" data-placement="bottom" data-html="true" title="Stream stats" data-content="loading stats...">
+						<i id="connection-quality-icon" class="fas fa-signal" ></i>
 					</button>
-					<button id="session-stats-btn" type="button" class="btn btn-lg" data-toggle="popover" data-placement="bottom" data-html="true" title="Session stats" data-content="loading stats...">
+					<button id="network-stats-btn" type="button" class="btn btn-lg stream-stat-btn" data-toggle="popover" data-placement="bottom" data-html="true" title="Network stats" data-content="loading stats...">
 						<i id="session-stats-icon" class="fas fa-network-wired" ></i>
+					</button>
+					<button id="session-stats-btn" type="button" class="btn btn-lg stream-stat-btn" data-toggle="popover" data-placement="bottom" data-html="true" title="Session stats" data-content="loading stats...">
+						<i id="session-stats-icon" class="fas fa-info-circle" ></i>
 					</button>
 				</div>
 				<div id="main-video-stats-btn-container" class="col-2 float-right text-right mt-2">
-					<button id="main-stats-btn" type="button" class="btn btn-lg" data-toggle="popover" data-placement="left" data-html="true" title="Video stats" data-content="loading stats...">
+					<button id="main-stream-stats-btn" type="button" class="btn btn-lg p-0" data-toggle="popover" data-placement="left" data-html="true" title="Video stats" data-content="loading stats...">
+						<i id="main-stream-stats-icon" class="fas fa-signal" style="color:#fff" ></i>
+					</button>
+					<button id="main-stats-btn" type="button" class="btn btn-lg" data-toggle="popover" data-placement="bottom" data-html="true" title="Video stats" data-content="loading stats...">
 						<i id="main-stats-icon" class="fas fa-info-circle" style="color:#fff" ></i>
 					</button>
 				</div>
@@ -52,7 +58,7 @@
 							<i id="user-icon" class="fas fa-user"></i>
 						</div>
 						<div id="local-stats-container" class="col-2 float-left text-left p-0 m-0">
-							<button id="audio-stats-btn" type="button" class="btn btn-lg"data-toggle="popover" data-placement="left" data-html="true" title="Audio stats" data-content="loading stats...">
+							<button id="audio-stats-btn" type="button" class="btn btn-lg"data-toggle="popover" data-placement="top" data-html="true" title="Audio stats" data-content="loading stats...">
 								<i id="audio-stats-icon" style="color:#fff" class="fas fa-file-audio" ></i>
 							</button>
 							<button id="video-stats-btn" type="button" class="btn btn-lg" data-toggle="popover" data-placement="left" data-html="true" title="Video stats" data-content="loading stats...">

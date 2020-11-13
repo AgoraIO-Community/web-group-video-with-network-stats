@@ -81,6 +81,11 @@
   width: 80%;
 }
 
+.stream-stat-btn {
+  margin: 1;
+  padding: 2;
+}
+
 #screen-share-btn-container {
   z-index: 99;
 }
@@ -94,6 +99,10 @@
 }
 
 #main-stats-btn {
+  display: none;
+}
+
+#main-stream-stats-btn {
   display: none;
 }
 

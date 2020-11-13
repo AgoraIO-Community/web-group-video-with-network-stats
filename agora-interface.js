@@ -39,7 +39,6 @@ function initClientAndJoinChannel(agoraAppId, token, channelName, uid) {
   });
 }
 
-
 client.on('stream-published', function (evt) {
   console.log("Publish local stream successfully");
   enableStats();
@@ -72,6 +71,7 @@ client.on('stream-subscribed', function (evt) {
     mainStreamId = remoteId;
     remoteStream.play('full-screen-video');
     $('#main-stats-btn').show();
+    $('#main-stream-stats-btn').show();
   } else {
     client.setRemoteVideoStreamType(remoteStream, 1); // subscribe to the low stream
     addRemoteStreamMiniView(remoteStream);
@@ -90,6 +90,10 @@ client.on("peer-leave", function(evt) {
       if(mainVideoStatsBtn.data('bs.popover')) {
           mainVideoStatsBtn.popover('hide');
       }
+      var mainVideoStatsBtn = $('#main-stream-stats-btn');
+      if(mainVideoStatsBtn.data('bs.popover')) {
+          mainVideoStatsBtn.popover('hide');
+      }
       // swap out the video
       var streamIds = Object.keys(remoteStreams);
       if (streamIds.length > 0) {
@@ -101,6 +105,7 @@ client.on("peer-leave", function(evt) {
         mainStreamId = randomId; // set the new main remote stream
       } else {
         $('#main-stats-btn').hide();
+        $('#main-stream-stats-btn').hide();
       }
     } else {
       // close the pop-over
@@ -299,14 +304,26 @@ function addRemoteStreamMiniView(remoteStream){
         ),
       $('<div/>', { 'id': streamId + '-stats-container', 'class': 'remote-stats-container col-2 float-right text-right p-0 m-0',}).append(
           $('<button/>', {
-                          'id': streamId +'-stats-btn', 
+                          'id': streamId +'-stream-stats-btn', 
                           'type': 'button', 
-                          'class': 'btn btn-lg',
+                          'class': 'btn btn-lg p-0 m-1',
                           'data-toggle': 'popover',
                           'data-placement': 'top',
                           'data-html': true,
-                          'title': 'Video Stats',
+                          'title': 'Stream Stats',
                           'data-content': 'loading stats...'
+            }).append(
+            $('<i/>', {'id': streamId +'-stream-stats-icon', 'class': 'fas fa-signal', 'style':'color:#fff'})
+          ),
+          $('<button/>', {
+            'id': streamId +'-stats-btn', 
+            'type': 'button', 
+            'class': 'btn btn-lg  p-0 m-1',
+            'data-toggle': 'popover',
+            'data-placement': 'top',
+            'data-html': true,
+            'title': 'Video Stats',
+            'data-content': 'loading stats...'
             }).append(
             $('<i/>', {'class': 'fas fa-info-circle', 'style':'color:#fff'})
           )
@@ -342,6 +359,7 @@ function leaveChannel() {
   // add the static pop-over btns first
   var statsBtns = [
     $('#main-stats-btn'),
+    $('#main-stream-stats-btn'),
     $('#network-stats-btn'),
     $('#session-stats-btn'),
     $('#audio-stats-btn'),
@@ -393,9 +411,50 @@ function generateToken() {
   return null; // TODO: add a token generation
 }
 
-
 // stats
 function enableStats() {
+
+  // local stream stats
+  var localStreamStatsBtn = $('#stream-stats-btn');
+  var localStreamStatsInterval = setInterval(() => {
+    localStreams.camera.stream.getStats((stats) => {
+      var networkQuality;
+      var networkIcon = $('#connection-quality-icon');
+      if (stats.accessDelay < 100){
+        networkQuality = "Good"
+        networkIcon.css( "color", "green" );
+      } else if (stats.accessDelay < 200){
+        networkQuality = "Poor"
+        networkIcon.css( "color", "orange" );
+      } else if (stats.accessDelay >= 200){
+        networkQuality = "Bad"
+        networkIcon.css( "color", "red" );
+      } else {
+        networkQuality = "-"
+        networkIcon.css( "color", "black" );
+      }
+      if(localStreamStatsBtn.data('bs.popover') && localStreamStatsBtn.attr('aria-describedby')) {
+        var localStreamStats = `<strong>Access Delay:</strong> ${stats.accessDelay}<br/>
+                                <strong>Network Quality:</strong> ${networkQuality}<br/> 
+                                <strong>Audio Send Bytes:</strong> ${stats.audioSendBytes}<br/>
+                                <strong>Audio Send Packets:</strong> ${stats.audioSendPackets}<br/>
+                                <strong>Audio Send Packets Lost:</strong> ${stats.audioSendPacketsLost}<br/>
+                                <strong>Video Send Bytes:</strong> ${stats.videoSendBytes}<br/>
+                                <strong>Video Send Frame Rate:</strong> ${stats.videoSendFrameRate} fps<br/>
+                                <strong>Video Send Packets:</strong> ${stats.videoSendPackets}<br/>
+                                <strong>Video Send Packets Lost:</strong> ${stats.videoSendPacketsLost}<br/>
+                                <strong>Video Send Resolution Heigh:</strong> ${stats.videoSendResolutionHeight}px<br/>  
+                                <strong>Video Send Resolution Width:</strong> ${stats.videoSendResolutionWidth}px
+                              `;
+      localStreamStatsBtn.data('bs.popover').element.dataset.content = localStreamStats;
+      localStreamStatsBtn.data('bs.popover').setContent();
+      localStreamStatsBtn.popover('update');
+      }
+
+    });
+  }, 1000);                        
+  statsIntervals.localStreamStatsInterval = localStreamStatsInterval;
+
   // network
   var networkStatsBtn = $('#network-stats-btn');
   var networkInterval = setInterval(() => {
@@ -522,6 +581,66 @@ function enableStats() {
     });
   }, 1000);
   statsIntervals.remoteVideo = remoteVideoInterval;
+  
+  // remote stream 
+  var remoteStreamInterval = setInterval(() => {
+    for(var uid in remoteStreams){
+      var remoteStreamStatsBtn;
+      var remoteNetworkIcon;
+      if(uid == mainStreamId){
+        remoteStreamStatsBtn = $('#main-stream-stats-btn');
+        remoteNetworkIcon = $('#main-stream-stats-icon'); 
+      } else {
+        remoteStreamStatsBtn = $('#'+ uid + '-stream-stats-btn');
+        remoteNetworkIcon = $('#'+ uid + '-stream-stats-icon'); 
+      }
+      console.log('get stats for uid: ' + uid);
+      remoteStreams[uid].getStats(function (stats) {
+        console.log('got stats for uid: ' + uid);
+        console.log(stats);
+        var networkQuality;
+        // update network icon color
+        if (stats.accessDelay < 100){
+          networkQuality = "Good"
+          remoteNetworkIcon.css( "color", "green" );
+        } else if (stats.accessDelay < 200){
+          networkQuality = "Poor"
+          remoteNetworkIcon.css( "color", "orange" );
+        } else if (stats.accessDelay >= 200){
+          networkQuality = "Bad"
+          remoteNetworkIcon.css( "color", "red" );
+        } else {
+          networkQuality = "-"
+          remoteNetworkIcon.css( "color", "white" );
+        }
+
+        // update tool-tip
+        if(remoteStreamStatsBtn.data('bs.popover')&& remoteStreamStatsBtn.attr('aria-describedby')) {
+          var remoteStreamStats = `<strong>Access Delay:</strong> ${stats.accessDelay}<br/>
+                                  <strong>Network Quality:</strong> ${networkQuality}<br/> 
+                                  <strong>Audio Receive Bytes:</strong> ${stats.audioReceiveBytes}<br/>
+                                  <strong>Audio Receive Delay:</strong> ${stats.audioReceiveDelay}<br/>
+                                  <strong>Audio Receive Packets:</strong> ${stats.audioReceivePackets}<br/>
+                                  <strong>Audio Receive Packets Lost:</strong> ${stats.audioReceivePacketsLost}<br/>
+                                  <strong>End To End Delay:</strong> ${stats.endToEndDelay}<br/>
+                                  <strong>Video Receive Bytes:</strong> ${stats.videoReceiveBytes}<br/>
+                                  <strong>Video Decode Frame Rate:</strong> ${stats.videoReceiveDecodeFrameRate} fps<br/>
+                                  <strong>Video Receive Delay:</strong> ${stats.videoReceiveDelay}<br/>
+                                  <strong>Video Receive Frame Rate:</strong> ${stats.videoReceiveFrameRate} fps<br/>
+                                  <strong>Video Receive Packets:</strong> ${stats.videoReceivePackets}<br/>
+                                  <strong>Video Receive Packets Lost:</strong> ${stats.videoReceivePacketsLost}<br/>
+                                  <strong>Video Receive Resolution Heigh:</strong> ${stats.videoReceiveResolutionHeight}px<br/>  
+                                  <strong>Video Receive Resolution Width:</strong> ${stats.videoReceiveResolutionWidth}px
+                                `;
+          remoteStreamStatsBtn.data('bs.popover').element.dataset.content = remoteStreamStats;
+          remoteStreamStatsBtn.data('bs.popover').setContent();
+          remoteStreamStatsBtn.popover('update');
+        }
+      });
+      
+    }
+  }, 1000);
+  statsIntervals.remoteStreamInterval = remoteStreamInterval;
 }
 
 function disableStats() {
