@@ -1,5 +1,5 @@
 /*
- * JS Interface for Agora.io SDK
+ * JS Interface with Agora.io SDK
  */
 
 // video profile settings
@@ -72,6 +72,14 @@ client.on('stream-subscribed', function (evt) {
     remoteStream.play('full-screen-video');
     $('#main-stats-btn').show();
     $('#main-stream-stats-btn').show();
+  } else if (remoteId == 49024) {
+    // move the current main stream to miniview
+    remoteStreams[mainStreamId].stop(); // stop the main video stream playback
+    client.setRemoteVideoStreamType(remoteStreams[mainStreamId], 1); // subscribe to the low stream
+    addRemoteStreamMiniView(remoteStreams[mainStreamId]); // send the main video stream to a container
+    // set the screen-share as the main
+    mainStreamId = localStreams.screen.id;
+    localStreams.screen.stream.play('full-screen-video');
   } else {
     client.setRemoteVideoStreamType(remoteStream, 1); // subscribe to the low stream
     addRemoteStreamMiniView(remoteStream);
@@ -80,11 +88,11 @@ client.on('stream-subscribed', function (evt) {
 
 // remove the remote-container when a user leaves the channel
 client.on("peer-leave", function(evt) {
-  var streamId = evt.stream.getId(); // the the stream id
+  var streamId = evt.uid; // the the stream id
   if(remoteStreams[streamId] != undefined) {
     remoteStreams[streamId].stop(); // stop playing the feed
     delete remoteStreams[streamId]; // remove stream from list
-    if (streamId == mainStreamId) {
+    if (streamId == mainStreamId || streamId == 49024) {
       // hide the stats popover
       var mainVideoStatsBtn = $('#main-stats-btn');
       if(mainVideoStatsBtn.data('bs.popover')) {
@@ -102,7 +110,7 @@ client.on("peer-leave", function(evt) {
         var remoteContainerID = '#' + randomId + '_container';
         $(remoteContainerID).empty().remove(); // remove the stream's miniView container
         remoteStreams[randomId].play('full-screen-video'); // play the random stream as the main stream
-        mainStreamId = randomId; // set the new main remote stream
+        mainStreamId = randomId; // set the new main remote stream 
       } else {
         $('#main-stats-btn').hide();
         $('#main-stream-stats-btn').hide();
@@ -218,7 +226,7 @@ function initScreenShare(agoraAppId, channelName) {
 
 function joinChannelAsScreenShare(channelName) {
   var token = generateToken();
-  var userID = 1337; // set to null to auto generate uid on successfull connection
+  var userID = 49024; // set to null to auto generate uid on successfull connection
   screenClient.join(token, channelName, userID, function(uid) { 
     localStreams.screen.id = uid;  // keep track of the uid of the screen stream.
     
@@ -252,8 +260,6 @@ function joinChannelAsScreenShare(channelName) {
 
   screenClient.on('stream-published', function (evt) {
     console.log("Publish screen stream successfully");
-    // localStreams.camera.stream.disableVideo(); // disable the local video stream (will send a mute signal)
-    // localStreams.camera.stream.stop(); // stop playing the local stream
     // TODO: add logic to swap main video feed back from container
     if(mainStreamId){
       remoteStreams[mainStreamId].stop(); // stop the main video stream playback
@@ -261,9 +267,7 @@ function joinChannelAsScreenShare(channelName) {
       addRemoteStreamMiniView(remoteStreams[mainStreamId]); // send the main video stream to a container
     }
     mainStreamId = localStreams.screen.id;
-    evt.stream.play('full-screen-video');
-    // localStreams.screen.stream.play('full-screen-video'); // play the screen share as full-screen-video (vortext effect?)
-    // $("#video-btn").prop("disabled",true); // disable the video button (as cameara video stream is disabled)
+    localStreams.screen.stream.play('full-screen-video');
   });
   
   screenClient.on('stopScreenSharing', function (evt) {
@@ -313,19 +317,19 @@ function addRemoteStreamMiniView(remoteStream){
                           'title': 'Stream Stats',
                           'data-content': 'loading stats...'
             }).append(
-            $('<i/>', {'id': streamId +'-stream-stats-icon', 'class': 'fas fa-signal', 'style':'color:#fff'})
+              $('<i/>', {'id': streamId +'-stream-stats-icon', 'class': 'fas fa-signal', 'style':'color:#fff'})
           ),
           $('<button/>', {
-            'id': streamId +'-stats-btn', 
-            'type': 'button', 
-            'class': 'btn btn-lg  p-0 m-1',
-            'data-toggle': 'popover',
-            'data-placement': 'top',
-            'data-html': true,
-            'title': 'Video Stats',
-            'data-content': 'loading stats...'
+                          'id': streamId +'-stats-btn', 
+                          'type': 'button', 
+                          'class': 'btn btn-lg  p-0 m-1',
+                          'data-toggle': 'popover',
+                          'data-placement': 'top',
+                          'data-html': true,
+                          'title': 'Video Stats',
+                          'data-content': 'loading stats...'
             }).append(
-            $('<i/>', {'class': 'fas fa-info-circle', 'style':'color:#fff'})
+              $('<i/>', {'class': 'fas fa-info-circle', 'style':'color:#fff'})
           )
         ),
       $('<div/>', {'id': 'agora_remote_' + streamId, 'class': 'remote-video'})
@@ -355,34 +359,8 @@ function leaveChannel() {
 
   // disable stats interval
   disableStats();
-
-  // add the static pop-over btns first
-  var statsBtns = [
-    $('#main-stats-btn'),
-    $('#main-stream-stats-btn'),
-    $('#network-stats-btn'),
-    $('#session-stats-btn'),
-    $('#audio-stats-btn'),
-    $('#video-stats-btn')
-  ]
-
-  // loop through remote streams and add dynamic popover btns
-  var streamIds = Object.keys(remoteStreams);
-  if (streamIds.length > 0) {
-    streamIds.forEach(function (streamId) {
-      var remoteStatbtn = $('#' + streamId +'-stats-btn')
-      if(remoteStatbtn)[
-        statsBtns.push(remoteStatbtn)
-      ]
-    })
-  }
-
   // hide all pop-overs
-  statsBtns.forEach(function(statBtn){
-    if(statBtn.data('bs.popover')) {
-      statBtn.popover('hide');
-    }
-  })
+  hideStatsPopovers()
 
 
   client.leave(function() {
@@ -412,6 +390,37 @@ function generateToken() {
 }
 
 // stats
+function hideStatsPopovers() {
+  // add the static pop-over btns first
+  var statsBtns = [
+    $('#main-stats-btn'), 
+    $('#main-stream-stats-btn'),
+    $('#stream-stats-btn'), 
+    $('#network-stats-btn'),
+    $('#session-stats-btn'),
+    $('#audio-stats-btn'),
+    $('#video-stats-btn')
+  ]
+
+  // loop through remote streams and add dynamic popover btns
+  var streamIds = Object.keys(remoteStreams);
+  if (streamIds.length > 0) {
+    streamIds.forEach(function (streamId) {
+      var remoteStatbtn = $('#' + streamId +'-stats-btn')
+      if(remoteStatbtn)[
+        statsBtns.push(remoteStatbtn)
+      ]
+    })
+  }
+
+  // hide all pop-overs
+  statsBtns.forEach(function(statBtn){
+    if(statBtn.data('bs.popover')) {
+      statBtn.popover('hide');
+    }
+  })
+}
+
 function enableStats() {
 
   // local stream stats
@@ -594,10 +603,10 @@ function enableStats() {
         remoteStreamStatsBtn = $('#'+ uid + '-stream-stats-btn');
         remoteNetworkIcon = $('#'+ uid + '-stream-stats-icon'); 
       }
-      console.log('get stats for uid: ' + uid);
+      // console.log('get stats for uid: ' + uid);
       remoteStreams[uid].getStats(function (stats) {
-        console.log('got stats for uid: ' + uid);
-        console.log(stats);
+        // console.log('-- stats for uid: ' + uid);
+        // console.log(stats);
         var networkQuality;
         // update network icon color
         if (stats.accessDelay < 100){
