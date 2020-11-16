@@ -192,13 +192,13 @@ function createCameraStream(uid) {
     });
 
     // set the lowstream profile settings
-    var lowVideoStreamProfile = {
-      bitrate: 200,
-      framerate: 15,
-      height: 240,
-      width: 320
-    }
-    client.setLowStreamParameter(lowVideoStreamProfile);
+    // var lowVideoStreamProfile = {
+    //   bitrate: 200,
+    //   framerate: 15,
+    //   height: 240,
+    //   width: 320
+    // }
+    // client.setLowStreamParameter(lowVideoStreamProfile);
 
     // publish local stream
     client.publish(localStream, function (err) {

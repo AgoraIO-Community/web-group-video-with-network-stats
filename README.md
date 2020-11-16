@@ -12,7 +12,7 @@ This is a group video chat web app that uses [Agora.io](https://www.agora.io) to
 Read the full tutorial: [GUIDE.MD](/GUIDE.MD)
 
 ## Hosted Demo ##
-If you would like to see the demo in action, check out the [demo of the code in action](https://digitallysavvy.github.io/group-video-chat/) on GitHub Pages 
+If you would like to see the demo in action, check out the [demo of the code in action]https://agoraio-community.github.io/web-group-video-with-network-stats/) on GitHub Pages 
 
 ## How to Run the Demo ##
 To test the video chat app, start a [simple web server](https://developer.mozilla.org/en-US/docs/Learn/Common_questions/set_up_a_local_testing_server) with a secure connection _(https)_. To keep things simple I like to use [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) but you can use XAMPP, or any other local server that you prefer.
