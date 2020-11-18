@@ -44,6 +44,100 @@ client.on('stream-published', function (evt) {
   enableStats();
 });
 
+// network
+client.on('network-quality', function(stats) {
+  // "0": The network quality is unknown.
+  // "1": The network quality is excellent.
+  // "2": The network quality is quite good, but the bitrate may be slightly lower than excellent.
+  // "3": Users can feel the communication slightly impaired.
+  // "4": Users can communicate only not very smoothly.
+  // "5": The network is so bad that users can hardly communicate.
+  // "6": The network is down and users cannot communicate at all.
+  // console.log('downlinkNetworkQuality', stats.downlinkNetworkQuality);
+  // console.log('uplinkNetworkQuality', stats.uplinkNetworkQuality);
+  var uplinkQuality;
+  var uplinkColor;
+  var uplinkIcon = $('#uplink-quality-icon');
+  var downlinkQuality;
+  var downlinkColor;
+  var downlinkIcon = $('#downlink-quality-icon');
+  switch (stats.downlinkNetworkQuality) {
+    case 0:
+      downlinkQuality = "Unknown"
+      downlinkColor = "#708090"; // slate grey
+      break;
+    case 1:
+      downlinkQuality = "Excellent"
+      downlinkColor = "#3CB371"; // medium sea green
+      break;
+    case 2:
+      downlinkQuality = "Good"
+      downlinkColor = "#90EE90"; // light-green
+      break;
+    case 3:
+      downlinkQuality = "OK"
+      downlinkColor = "#9ACD32"; // yellow-green
+      break;
+    case 4:
+      downlinkQuality = "Not Good"
+      downlinkColor = "#FFFF00"; // yellow
+      break;
+    case 5:
+      downlinkQuality = "Poor"
+      downlinkColor = "#FF8C00"; // dark orange
+      break;
+    case 6:
+      downlinkQuality = "Bad"
+      downlinkColor = "#FF0000"; // red
+        break;
+    default:
+      console.log('Downlink Quality Error - unknown value: ' + stats.downlinkNetworkQuality);
+      downlinkQuality = "-";
+      downlinkColor = 'black';
+      break;
+  }
+  switch (stats.uplinkNetworkQuality) {
+    case 0:
+      uplinkQuality = "Unknown"
+      uplinkColor = "#708090"; // slate grey
+      break;
+    case 1:
+      uplinkQuality = "Excellent"
+      uplinkColor = "#3CB371"; // medium sea green
+      break;
+    case 2:
+      uplinkQuality = "Good"
+      uplinkColor = "#90EE90"; // light-green
+      break;
+    case 3:
+      uplinkQuality = "OK"
+      uplinkColor = "#9ACD32"; // yellow-green
+      break;
+    case 4:
+      uplinkQuality = "Not Good"
+      uplinkColor = "#FFFF00"; // yellow
+      break;
+    case 5:
+      uplinkQuality = "Poor"
+      uplinkColor = "#FF8C00"; // dark orange
+      break;
+    case 6:
+      uplinkQuality = "Bad"
+      uplinkColor = "#FF0000"; // red
+        break;
+    default:
+      console.log('Uplink Quality Error - unknown value: ' + stats.uplinkNetworkQuality);
+      uplinkQuality = "-";
+      uplinkColor = 'black';
+      break;
+  }
+  uplinkIcon.attr('title', `Uplink Quality: ${uplinkQuality}`);
+  uplinkIcon.css( "color", uplinkColor ); // slate grey
+  downlinkIcon.attr('title', `Downlink Quality: ${downlinkQuality}`);
+  downlinkIcon.css( "color", downlinkColor); // slate grey
+
+});
+
 // connect remote streams
 client.on('stream-added', function (evt) {
   var stream = evt.stream;
