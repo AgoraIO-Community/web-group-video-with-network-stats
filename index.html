@@ -11,8 +11,12 @@
 					<button id="stream-stats-btn" type="button" class="btn btn-lg stream-stat-btn" data-toggle="popover" data-placement="bottom" data-html="true" title="Stream stats" data-content="loading stats...">
 						<i id="connection-quality-icon" class="fas fa-signal" ></i>
 					</button>
-						<i id="downlink-quality-icon" title="Downlink Quality" class="fas fa-download btn-lg stream-stat-btn" ></i>
-						<i id="uplink-quality-icon" title="Uplink Quality" class="fas fa-upload btn-lg stream-stat-btn" ></i>
+					<button id="downlink-quality-btn" type="button" class="btn btn-lg stream-stat-btn" data-toggle="popover" data-placement="bottom" data-html="true" title="Downlink Quality" data-content="loading stats...">
+						<i id="downlink-quality-icon" title="Downlink Quality" class="fas fa-download" ></i>
+					</button>
+					<button id="uplink-quality-btn" type="button" class="btn btn-lg stream-stat-btn" data-toggle="popover" data-placement="bottom" data-html="true" title="Uplink Quality" data-content="loading stats...">
+						<i id="uplink-quality-icon" title="Uplink Quality" class="fas fa-upload" ></i>
+					</button>
 					<button id="network-stats-btn" type="button" class="btn btn-lg stream-stat-btn" data-toggle="popover" data-placement="bottom" data-html="true" title="Network stats" data-content="loading stats...">
 						<i id="network-stats-icon" class="fas fa-network-wired" ></i>
 					</button>
@@ -24,8 +28,14 @@
 					<button id="main-stream-stats-btn" type="button" class="btn btn-lg p-0" data-toggle="popover" data-placement="left" data-html="true" title="Video stats" data-content="loading stats...">
 						<i id="main-stream-stats-icon" class="fas fa-signal" style="color:#fff" ></i>
 					</button>
-					<button id="main-stats-btn" type="button" class="btn btn-lg" data-toggle="popover" data-placement="bottom" data-html="true" title="Video stats" data-content="loading stats...">
-						<i id="main-stats-icon" class="fas fa-info-circle" style="color:#fff" ></i>
+					<!-- <button id="main-video-stats-btn" type="button" class="btn btn-lg" data-toggle="popover" data-placement="bottom" data-html="true" title="Video stats" data-content="loading stats...">
+						<i id="main-video-stats-icon" class="fas fa-info-circle" style="color:#fff" ></i>
+					</button> -->
+					<button id="main-video-stats-btn" type="button" class="btn btn-lg p-0" data-toggle="popover" data-placement="bottom" data-html="true" title="Video stats" data-content="loading stats...">
+						<i id="main-video-stats-icon" class="fas fa-file-video" style="color:#fff" ></i>
+					</button>
+					<button id="main-audio-stats-btn" type="button" class="btn btn-lg p-0" data-toggle="popover" data-placement="bottom" data-html="true" title="Audio stats" data-content="loading stats...">
+						<i id="main-audio-stats-icon" class="fas fa-file-audio" style="color:#fff" ></i>
 					</button>
 				</div>
 				<div id="buttons-container" class="row justify-content-center mt-3">

@@ -46,96 +46,8 @@ client.on('stream-published', function (evt) {
 
 // network
 client.on('network-quality', function(stats) {
-  // "0": The network quality is unknown.
-  // "1": The network quality is excellent.
-  // "2": The network quality is quite good, but the bitrate may be slightly lower than excellent.
-  // "3": Users can feel the communication slightly impaired.
-  // "4": Users can communicate only not very smoothly.
-  // "5": The network is so bad that users can hardly communicate.
-  // "6": The network is down and users cannot communicate at all.
-  // console.log('downlinkNetworkQuality', stats.downlinkNetworkQuality);
-  // console.log('uplinkNetworkQuality', stats.uplinkNetworkQuality);
-  var uplinkQuality;
-  var uplinkColor;
-  var uplinkIcon = $('#uplink-quality-icon');
-  var downlinkQuality;
-  var downlinkColor;
-  var downlinkIcon = $('#downlink-quality-icon');
-  switch (stats.downlinkNetworkQuality) {
-    case 0:
-      downlinkQuality = "Unknown"
-      downlinkColor = "#708090"; // slate grey
-      break;
-    case 1:
-      downlinkQuality = "Excellent"
-      downlinkColor = "#3CB371"; // medium sea green
-      break;
-    case 2:
-      downlinkQuality = "Good"
-      downlinkColor = "#90EE90"; // light-green
-      break;
-    case 3:
-      downlinkQuality = "OK"
-      downlinkColor = "#9ACD32"; // yellow-green
-      break;
-    case 4:
-      downlinkQuality = "Not Good"
-      downlinkColor = "#FFFF00"; // yellow
-      break;
-    case 5:
-      downlinkQuality = "Poor"
-      downlinkColor = "#FF8C00"; // dark orange
-      break;
-    case 6:
-      downlinkQuality = "Bad"
-      downlinkColor = "#FF0000"; // red
-        break;
-    default:
-      console.log('Downlink Quality Error - unknown value: ' + stats.downlinkNetworkQuality);
-      downlinkQuality = "-";
-      downlinkColor = 'black';
-      break;
-  }
-  switch (stats.uplinkNetworkQuality) {
-    case 0:
-      uplinkQuality = "Unknown"
-      uplinkColor = "#708090"; // slate grey
-      break;
-    case 1:
-      uplinkQuality = "Excellent"
-      uplinkColor = "#3CB371"; // medium sea green
-      break;
-    case 2:
-      uplinkQuality = "Good"
-      uplinkColor = "#90EE90"; // light-green
-      break;
-    case 3:
-      uplinkQuality = "OK"
-      uplinkColor = "#9ACD32"; // yellow-green
-      break;
-    case 4:
-      uplinkQuality = "Not Good"
-      uplinkColor = "#FFFF00"; // yellow
-      break;
-    case 5:
-      uplinkQuality = "Poor"
-      uplinkColor = "#FF8C00"; // dark orange
-      break;
-    case 6:
-      uplinkQuality = "Bad"
-      uplinkColor = "#FF0000"; // red
-        break;
-    default:
-      console.log('Uplink Quality Error - unknown value: ' + stats.uplinkNetworkQuality);
-      uplinkQuality = "-";
-      uplinkColor = 'black';
-      break;
-  }
-  uplinkIcon.attr('title', `Uplink Quality: ${uplinkQuality}`);
-  uplinkIcon.css( "color", uplinkColor ); // slate grey
-  downlinkIcon.attr('title', `Downlink Quality: ${downlinkQuality}`);
-  downlinkIcon.css( "color", downlinkColor); // slate grey
-
+  setQualityDescriptors(stats.uplinkNetworkQuality, $('#uplink-quality-btn'), $('#uplink-quality-icon'))
+  setQualityDescriptors(stats.downlinkNetworkQuality, $('#downlink-quality-btn'), $('#downlink-quality-icon'));
 });
 
 // connect remote streams
@@ -652,13 +564,43 @@ function enableStats() {
   }, 1000);
   statsIntervals.localVideo = localVideoInterval;
 
+  // remote audio
+  var remoteAudioInterval = setInterval(() => {
+    client.getRemoteVideoStats((remoteAudioStatsMap) => {
+      for(var uid in remoteAudioStatsMap){
+        var remoteAudioStatsBtn;
+        if(uid == mainStreamId){
+          remoteAudioStatsBtn = $('#main-audio-stats-btn');
+        } else {
+          remoteAudioStatsBtn = $('#'+ uid +'-stats-btn');
+        }
+        if(remoteAudioStatsBtn.data('bs.popover')&& remoteAudioStatsBtn.attr('aria-describedby')) {
+          var videoStats = `<strong>CodecType:</strong> ${remoteAudioStatsMap[uid].CodecType}<br/>
+                            <strong>End 2 End Delay:</strong> ${remoteAudioStatsMap[uid].End2EndDelay}ms<br/>
+                            <strong>Mute State:</strong> ${remoteAudioStatsMap[uid].MuteState}<br/>
+                            <strong>Packet Loss Rate:</strong> ${remoteAudioStatsMap[uid].PacketLossRate}%<br/>
+                            <strong>Recv Bitrate:</strong> ${remoteAudioStatsMap[uid].RecvBitrate} Kbps<br/>
+                            <strong>Recv Level:</strong> ${remoteAudioStatsMap[uid].RecvLevel}px<br/>
+                            <strong>Total Freeze Time:</strong> ${remoteAudioStatsMap[uid].TotalFreezeTime}s<br/>
+                            <strong>Total Play Duration:</strong> ${remoteAudioStatsMap[uid].TotalPlayDuration}s<br/>
+                            <strong>Transport Delay:</strong> ${remoteAudioStatsMap[uid].TransportDelay}ms
+                            `;
+            remoteAudioStatsBtn.data('bs.popover').element.dataset.content = videoStats;
+            remoteAudioStatsBtn.data('bs.popover').setContent();
+            remoteAudioStatsBtn.popover('update');
+        }
+      }
+    });
+  }, 1000);
+  statsIntervals.remoteAudio = remoteAudioInterval;
+
   // remote video
   var remoteVideoInterval = setInterval(() => {
     client.getRemoteVideoStats((remoteVideoStatsMap) => {
       for(var uid in remoteVideoStatsMap){
         var remoteVideoStatsBtn;
         if(uid == mainStreamId){
-          remoteVideoStatsBtn = $('#main-stats-btn');
+          remoteVideoStatsBtn = $('#main-video-stats-btn');
         } else {
           remoteVideoStatsBtn = $('#'+ uid +'-stats-btn');
         }
@@ -757,4 +699,58 @@ function disableStats() {
   }
 }
 
+// quality discriptor 
+function setQualityDescriptors(quality, btn, icon) {
+  // "0": The network quality is unknown.
+  // "1": The network quality is excellent.
+  // "2": The network quality is quite good, but the bitrate may be slightly lower than excellent.
+  // "3": Users can feel the communication slightly impaired.
+  // "4": Users can communicate only not very smoothly.
+  // "5": The network is so bad that users can hardly communicate.
+  // "6": The network is down and users cannot communicate at all.
+  var description;
+  var color;
+  switch (quality) {
+    case 0:
+      description = "Unknown"
+      color = "#708090"; // slate grey
+      break;
+    case 1:
+      description = "Excellent"
+      color = "#3CB371"; // medium sea green
+      break;
+    case 2:
+      description = "Good"
+      color = "#90EE90"; // light-green
+      break;
+    case 3:
+      description = "OK"
+      color = "#9ACD32"; // yellow-green
+      break;
+    case 4:
+      description = "Not Good"
+      color = "#FFFF00"; // yellow
+      break;
+    case 5:
+      description = "Poor"
+      color = "#FF8C00"; // dark orange
+      break;
+    case 6:
+      description = "Bad"
+      color = "#FF0000"; // red
+        break;
+    default:
+      console.log('Uplink Quality Error - unknown value: ' + stats.uplinkNetworkQuality);
+      description = "-";
+      color = 'black';
+      break;
+  }
 
+  if (btn.attr('aria-describedby')) {
+    btn.data('bs.popover').element.dataset.content = description;
+    btn.data('bs.popover').setContent();
+    btn.popover('update');
+  }
+
+  icon.css( "color", color); 
+}
