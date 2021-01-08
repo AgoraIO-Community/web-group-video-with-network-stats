@@ -28,9 +28,6 @@
 					<button id="main-stream-stats-btn" type="button" class="btn btn-lg p-0" data-toggle="popover" data-placement="left" data-html="true" title="Video stats" data-content="loading stats...">
 						<i id="main-stream-stats-icon" class="fas fa-signal" style="color:#fff" ></i>
 					</button>
-					<!-- <button id="main-video-stats-btn" type="button" class="btn btn-lg" data-toggle="popover" data-placement="bottom" data-html="true" title="Video stats" data-content="loading stats...">
-						<i id="main-video-stats-icon" class="fas fa-info-circle" style="color:#fff" ></i>
-					</button> -->
 					<button id="main-video-stats-btn" type="button" class="btn btn-lg p-0" data-toggle="popover" data-placement="bottom" data-html="true" title="Video stats" data-content="loading stats...">
 						<i id="main-video-stats-icon" class="fas fa-file-video" style="color:#fff" ></i>
 					</button>
@@ -122,7 +119,7 @@
     </div>
 	</body>
 	<!-- Agora SDKs -->
-	<script type="text/javascript" src="AgoraRTCSDK-3.2.3.js"></script>
+	<script type="text/javascript" src="AgoraRTCSDK-3.3.1.js"></script>
 	<!-- external css -->
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
@@ -154,7 +151,7 @@
 			var agoraAppId = $('#form-appid').val();
 			var token = $('#form-token').val();
 			var channelName = $('#form-channel').val();
-			var uid = $("#form-uid").val();
+			var uid = parseInt($("#form-uid").val());
 			$("#modalForm").modal("hide");
 			initClientAndJoinChannel(agoraAppId, token, channelName, uid);
 		});
