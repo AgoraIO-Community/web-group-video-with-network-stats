@@ -83,9 +83,9 @@ client.on('stream-subscribed', function (evt) {
     remoteStreams[mainStreamId].stop(); // stop the main video stream playback
     client.setRemoteVideoStreamType(remoteStreams[mainStreamId], 1); // subscribe to the low stream
     addRemoteStreamMiniView(remoteStreams[mainStreamId]); // send the main video stream to a container
-    // set the screen-share as the main
-    mainStreamId = localStreams.screen.id;
-    localStreams.screen.stream.play('full-screen-video');
+    // set the screen-share as the main 
+    mainStreamId = remoteId;
+    remoteStream.play('full-screen-video');s
   } else {
     client.setRemoteVideoStreamType(remoteStream, 1); // subscribe to the low stream
     addRemoteStreamMiniView(remoteStream);
@@ -266,10 +266,24 @@ function initScreenShare(agoraAppId, channelName) {
   var token = generateToken();
   screenClient.on('stream-published', function (evt) {
     console.log("Publish screen stream successfully");
-    remoteStreams[mainStreamId].stop(); // stop the main video stream playback
-    addRemoteStreamMiniView(remoteStreams[mainStreamId]); // send the main video stream to a container
-    localStreams.screen.stream.play('full-screen-video'); // play the screen share as full-screen-video (vortext effect?)
-    $("#video-btn").prop("disabled",true); // disable the video button (as cameara video stream is disabled)
+    
+    if( $('#full-screen-video').is(':empty') ) { 
+      $('#main-stats-btn').show();
+      $('#main-stream-stats-btn').show();
+    } else {
+      // move the current main stream to miniview
+      remoteStreams[mainStreamId].stop(); // stop the main video stream playback
+      client.setRemoteVideoStreamType(remoteStreams[mainStreamId], 1); // subscribe to the low stream
+      addRemoteStreamMiniView(remoteStreams[mainStreamId]); // send the main video stream to a container
+    }
+
+    mainStreamId = localStreams.screen.id;
+    localStreams.screen.stream.play('full-screen-video');
+
+    // remoteStreams[mainStreamId].stop(); // stop the main video stream playback
+    // addRemoteStreamMiniView(remoteStreams[mainStreamId]); // send the main video stream to a container
+    // localStreams.screen.stream.play('full-screen-video'); // play the screen share as full-screen-video (vortext effect?)
+    // $("#video-btn").prop("disabled",true); // disable the video button (as cameara video stream is disabled)
   });
   
   screenClient.on('stopScreenSharing', function (evt) {
