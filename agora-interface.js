@@ -279,11 +279,6 @@ function initScreenShare(agoraAppId, channelName) {
 
     mainStreamId = localStreams.screen.id;
     localStreams.screen.stream.play('full-screen-video');
-
-    // remoteStreams[mainStreamId].stop(); // stop the main video stream playback
-    // addRemoteStreamMiniView(remoteStreams[mainStreamId]); // send the main video stream to a container
-    // localStreams.screen.stream.play('full-screen-video'); // play the screen share as full-screen-video (vortext effect?)
-    // $("#video-btn").prop("disabled",true); // disable the video button (as cameara video stream is disabled)
   });
   
   screenClient.on('stopScreenSharing', function (evt) {
